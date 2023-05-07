@@ -111,20 +111,20 @@ public:
     // Сообщает, пустой ли массив
     bool IsEmpty() const noexcept
     {
-        if (size_ == 0)
-            return true;
-        return false;
+        return size_ == 0;
     }
 
     // Возвращает ссылку на элемент с индексом index
     Type& operator[](size_t index) noexcept
     {
+        assert(index <= size_);
         return items_[index];
     }
 
     // Возвращает константную ссылку на элемент с индексом index
     const Type& operator[](size_t index) const noexcept
     {
+        assert(index <= size_);
         return items_[index];
     }
 
@@ -252,6 +252,9 @@ public:
     // вместимость вектора должна увеличиться вдвое, а для вектора вместимостью 0 стать равной 1
     Iterator Insert(ConstIterator pos, const Type& value)
     {
+        assert(pos >= begin());
+        assert (pos <= end());
+
         auto dist = std::distance(cbegin(), pos);
 
         if (size_ < capacity_)
@@ -278,15 +281,19 @@ public:
     // "Удаляет" последний элемент вектора. Вектор не должен быть пустым
     void PopBack() noexcept
     {
-        if (size_ != 0)
-            --size_;
+        assert(size_ != 0);
+        --size_;
     }
 
     // Удаляет элемент вектора в указанной позиции
     Iterator Erase(ConstIterator pos)
     {
+        assert(pos >= begin());
+        assert(pos <= end());
+        assert(size_ != 0);
+
         auto dis = std::distance(cbegin(), pos);
-        std::move(begin()+dis+1, end(), begin()+dis);
+        std::move(begin() + dis + 1, end(), begin() + dis);
         --size_;
         return const_cast<Iterator>(pos);
     }
@@ -343,7 +350,9 @@ public:
     // Обменивает значение с другим вектором
     void swap(SimpleVector&& other) noexcept
     {
-        items_.swap(other.items_);
+        //items_.swap(other.items_);
+        std::swap(items_, other.items_);
+
         size_t temp_size = std::move(other.size_);
         size_t temp_capasity = std::move(other.capacity_);
 
@@ -357,6 +366,7 @@ public:
     Iterator Insert(Iterator pos, Type&& value)
     {
         assert(pos >= begin());
+        assert (pos <= end());
 
         auto dist = std::distance(begin(), pos);
 
@@ -408,20 +418,19 @@ inline bool operator<(const SimpleVector<Type>& lhs, const SimpleVector<Type>& r
 }
 
 template <typename Type>
-inline bool operator<=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
-{
-    return lhs < rhs || lhs == rhs;
-}
-
-template <typename Type>
 inline bool operator>(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
     return rhs < lhs;
 }
 
 template <typename Type>
-inline bool operator>=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
+inline bool operator<=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
-    return rhs < lhs || lhs == rhs;
+    return !(lhs > rhs);
 }
 
+template <typename Type>
+inline bool operator>=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
+{
+    return !(lhs < rhs);
+}
